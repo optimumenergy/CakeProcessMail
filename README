@@ -1,0 +1,30 @@
+CakePHP processmail component
+(c)2011 Andy Dixon, andy@andydixon.com
+
+Take emails from an mail/usenet account, split and decode attachments and get plain text version of the message body into a big sexy array.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+TODO: Improve this document
+
+Stick this file in the controller/components folder, and add it to the $components on the relavent controller.
+
+
+Usage example:
+        $this->Processmail->server = '{imap.gmail.com:993/imap/ssl/novalidate-cert}';
+        $this->Processmail->login = 'username@gmail.com';
+        $this->Processmail->password = 'password123';
+        $messages = $this->Processmail->getMessages();
+
+The server needs to be in the format of php's imap_open() function, and can handle POP,IMAP,NNTP and Unix Mail Spool
