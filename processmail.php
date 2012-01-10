@@ -1,5 +1,25 @@
 <?php
+/**
 
+CakePHP processmail component
+(c)2012 Andy Dixon, andy@andydixon.com
+
+Take emails from an mail/usenet account, split and decode attachments and get plain text version of the message body into a big sexy array.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+ */
 class ProcessmailComponent extends Object {
 
     //example for server, gmail: '{imap.gmail.com:993/imap/ssl/novalidate-cert}'
@@ -8,6 +28,7 @@ class ProcessmailComponent extends Object {
     var $password = false;
     var $deleteAfterRetr = TRUE;
     var $messages = array();
+    var $count = false;
     private $connection;
 
     /**
@@ -17,6 +38,7 @@ class ProcessmailComponent extends Object {
     function connect() {
         if ($this->server && $this->login && $this->password):
             $this->connection = imap_open($this->server, $this->login, $this->password);
+        $this->count=imap_num_msg($this->connection);
         else:
             throw new exception('Missing Connection Details');
         endif;
@@ -43,14 +65,6 @@ class ProcessmailComponent extends Object {
     }
 
     /**
-     * function count() 
-     * @return int Number of Messages of objects IMAP/POP 
-     */
-    function count() {
-        return imap_num_msg($this->connection);
-    }
-
-    /**
      * function getMessages()
      * 
      * @return array of messages and decoded (binary) attachments
@@ -58,7 +72,7 @@ class ProcessmailComponent extends Object {
     function getMessages() {
         $this->connect();
         if ($this->connection):
-            $count = $this->count();
+            $count = $this->count;
             if($count>0):
             for ($msgno = 1; $msgno <= $count; $msgno++) {
 
@@ -130,8 +144,10 @@ class ProcessmailComponent extends Object {
                     } /* while */
                 } /* complicated message */
 
-                if ($this->deleteAfterRetr)
+                if ($this->deleteAfterRetr):
                     imap_delete($this->connection, $msgno);
+                    imap_delete($this->connection, $msgno.':'.$msgno);
+                    endif;
             }
             endif;
             
@@ -141,6 +157,7 @@ class ProcessmailComponent extends Object {
     }
 
     function disconnect() {
+        imap_expunge($this->connection);
         imap_close($this->connection);
     }
 

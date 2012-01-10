@@ -1,5 +1,5 @@
 CakePHP processmail component
-(c)2011 Andy Dixon, andy@andydixon.com
+(c)2012 Andy Dixon, andy@andydixon.com
 
 Take emails from an mail/usenet account, split and decode attachments and get plain text version of the message body into a big sexy array.
 
