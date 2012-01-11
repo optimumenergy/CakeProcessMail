@@ -122,12 +122,15 @@ class ProcessmailComponent extends Object {
 
                             if (strtoupper($parts[$i]->disposition) ==
                                     "ATTACHMENT") { /* Attachment */
-                                $att = array("filename" =>
-                                    $parts[$i]->parameters[0]->value,
-                                    "filedata" =>
-                                    imap_fetchbody($this->connection, $msgno, $partstring),
-                                    "encoding" => $parts[$i]->encoding);
-                                $this->messages[$msgno]['attachments'][] = $this->decode($att);
+                                    if (is_array($parts[$i]->parameters)):
+                                        $att = array("filename" => $parts[$i]->parameters[0]->value, "filedata" => imap_fetchbody($this->connection, $msgno, $partstring), "encoding" => $parts[$i]->encoding);
+                                        $this->messages[$msgno]['attachments'][] = $this->decode($att);
+                                        
+                                        else: //F*cking Outlook
+                                            
+                                            //To be confirmed
+                                            
+                                    endif;
                             } elseif (strtoupper($parts[$i]->subtype) ==
                                     "PLAIN") { /* Message */
                                 $this->messages[$msgno]['messageBody'] = imap_fetchbody($this->connection, $msgno, $partstring);
