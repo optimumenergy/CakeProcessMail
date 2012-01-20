@@ -26,9 +26,10 @@ class ProcessmailComponent extends Object {
     var $server = false;
     var $login = false;
     var $password = false;
-    var $deleteAfterRetr = TRUE;
+    var $deleteAfterRetr = false;
     var $messages = array();
     var $count = false;
+    var $optimise = false;
     private $connection;
 
     /**
@@ -74,7 +75,15 @@ class ProcessmailComponent extends Object {
         if ($this->connection):
             $count = $this->count;
             if($count>0):
-            for ($msgno = 1; $msgno <= $count; $msgno++) {
+
+            //Optimisation trick - if a mailbox is not deleting items but is large, this should speed things up
+            if($this->optimise):
+                $msgs=imap_search($this->connection,"UNDELETED SINCE ".date('d-M-Y',strtotime("yesterday")));
+            else:
+                $msgs=range(1,$count);
+            endif;
+
+            foreach ($msgs as $msgno) {
 
                 $headers = imap_headerinfo($this->connection, $msgno);
                 $this->messages[$msgno]['fromAddress'] = $headers->fromaddress;
@@ -92,7 +101,7 @@ class ProcessmailComponent extends Object {
 
                 if (!$parts) { /* Simple message, only 1 piece */
                     $attachment = array(); /* No attachments */
-                    $this->messages[$msgno]['messageBody'] = imap_body($this->connection, $msgno);
+                    $this->messages[$msgno]['messageBody'] = imap_body($this->connection, $msgno,FT_PEEK);
                 } else { /* Complicated message, multiple parts */
 
                     $endwhile = false;
@@ -123,17 +132,16 @@ class ProcessmailComponent extends Object {
                             if (strtoupper($parts[$i]->disposition) ==
                                     "ATTACHMENT") { /* Attachment */
                                     if (is_array($parts[$i]->parameters)):
-                                        $att = array("filename" => $parts[$i]->parameters[0]->value, "filedata" => imap_fetchbody($this->connection, $msgno, $partstring), "encoding" => $parts[$i]->encoding);
+                                        $att = array("filename" => $parts[$i]->parameters[0]->value, "filedata" => imap_fetchbody($this->connection, $msgno, $partstring,FT_PEEK), "encoding" => $parts[$i]->encoding);
                                         $this->messages[$msgno]['attachments'][] = $this->decode($att);
-                                        
                                         else: //F*cking Outlook
-                                            
-                                            //To be confirmed
-                                            
-                                    endif;
+                                                $att = array("filename" => '__UNKNOWN__', "filedata" => imap_fetchbody($this->connection, $msgno, $partstring,FT_PEEK), "encoding" => $parts[$i]->encoding);
+                                                $this->messages[$msgno]['attachments'][] = $this->decode($att);
+                                                if(!isset($this->messages[$msgno]['messageBody'])||strlen($this->messages[$msgno]['messageBody'])<1) $this->messages[$msgno]['messageBody'] =$att['filedata'];
+                                  endif;
                             } elseif (strtoupper($parts[$i]->subtype) ==
                                     "PLAIN") { /* Message */
-                                $this->messages[$msgno]['messageBody'] = imap_fetchbody($this->connection, $msgno, $partstring);
+                                $this->messages[$msgno]['messageBody'] = imap_fetchbody($this->connection, $msgno, $partstring,FT_PEEK);
                             }
                         }
 
@@ -181,7 +189,7 @@ class ProcessmailComponent extends Object {
             } elseif ($coding == 3) {
                 $message = imap_base64($att['filedata']);
             } elseif ($coding == 4) {
-                $message = quoted_printable($att['filedata']);
+                $message = quoted_printable_decode($att['filedata']);
             } elseif ($coding == 5) {
                 $message = $att['filedata'];
             }
@@ -191,5 +199,20 @@ class ProcessmailComponent extends Object {
         endif;
         return array();
     }
+
+    public function initialize() {
+
+    }
+
+    public function startup() {
+ 
+    }
+    public function beforeRender() {
+ 
+    }
+    public function shutdown() {
+ 
+    }
+
 
 }

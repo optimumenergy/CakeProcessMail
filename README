@@ -18,13 +18,19 @@ Take emails from an mail/usenet account, split and decode attachments and get pl
 
 TODO: Improve this document
 
-Stick this file in the controller/components folder, and add it to the $components on the relavent controller.
+Stick this file in the controller/components folder, and add it to the $components on the relavent controller for Cake 1.3 or alternative for Cake 2.0.
 
 
 Usage example:
         $this->Processmail->server = '{imap.gmail.com:993/imap/ssl/novalidate-cert}';
         $this->Processmail->login = 'username@gmail.com';
         $this->Processmail->password = 'password123';
+	$this->Processmail->deleteAfterRetr = true;
         $messages = $this->Processmail->getMessages();
 
 The server needs to be in the format of php's imap_open() function, and can handle POP,IMAP,NNTP and Unix Mail Spool
+
+If messages are not being deleted from the mailbox, an optional variable can be passed to speed up large mailboxes:
+	$this->Processmail->optimise = true;
+
+This will only pull undeleted messages since yesterday.
